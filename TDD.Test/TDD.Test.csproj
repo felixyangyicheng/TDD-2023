@@ -20,4 +20,10 @@
   <ItemGroup>
     <ProjectReference Include="..\TDD\TDD.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
 </Project>

@@ -1,8 +1,14 @@
-﻿namespace TDD;
-class Program
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore;
+
+namespace TDD;
+public class Program
 {
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
+
+        var builder = WebApplication.CreateBuilder(args);
 
         Console.WriteLine("yes");
     }
