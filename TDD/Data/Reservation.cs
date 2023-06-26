@@ -26,6 +26,13 @@ namespace TDD.Data
         [Column("dateFin")]
 
         public DateTime? DateFin { get; set; }
-	}
+
+        public bool IsValidDuration4Months()
+        {
+            bool result = false;
+            return result;
+        }
+
+    }
 }
 
