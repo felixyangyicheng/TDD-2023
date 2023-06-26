@@ -5,6 +5,8 @@ namespace TDD.Test.DataTest
     public class LivreTest
 	{
         [TestMethod]
+        [DataRow()]
+
         public void CheckIsbnValidity()
         {
             

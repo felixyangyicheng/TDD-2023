@@ -18,15 +18,7 @@ namespace TDD.Data
         public bool Disponible { get; set; }
 
 
-        public Livre(string isbn, string titre, string auteur, string editeur, Format format,bool dispo )
-        {
-            Isbn = isbn;
-            Titre = titre;
-            Auteur = auteur;
-            Editeur = editeur;
-            Format = format;
-            Disponible = dispo;
-        }
+
 
 
 
