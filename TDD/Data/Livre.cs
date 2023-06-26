@@ -20,7 +20,11 @@ namespace TDD.Data
 
 
 
-
+        public bool IsValidISBN()
+        {
+            bool result = false;
+            return result;
+        }
 
     }
 }

@@ -82,7 +82,7 @@ namespace TDD.Test.Services
         }
 
         [TestMethod]
-        public async Task CreateBook_AddsNewBook()
+        public async Task CreateBook_AddsNewBookWithCompleteInfo()
         {
             // Arrange
             var livre = new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur = "Editeur 1", Format = Format.Broche, Disponible = true };
@@ -95,6 +95,22 @@ namespace TDD.Test.Services
             Assert.IsNotNull(livreCree);
             Assert.IsTrue(result);
             Assert.AreEqual(livre, livreCree);
+        }
+
+        [TestMethod]
+        public async Task CreateBook_InvalidBook_DoesNotAddBookToDatabase()
+        {
+            // Arrange
+            var livre = new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1"};
+
+            // Act
+            var result = await _repository.Create(livre);
+
+            // Assert
+            var livreCree = _db.Livres.FirstOrDefault(b => b.Isbn == livre.Isbn);
+            Assert.IsNull(livreCree);
+            Assert.IsFalse(result);
+
         }
         [TestMethod]
         public async Task UpdateBook_UpdatesExistingBook()

@@ -150,10 +150,8 @@ namespace TDD.Test.Services
             var reservationOrigine = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
             _db.Reservations.Add(reservationOrigine);
             _db.SaveChanges();
-      
             // Act
             var result = await _repository.Delete(1);
-
             // Assert
             Assert.IsTrue(result);
             var reservation = _db.Reservations.FirstOrDefault(b => b.Isbn == reservationOrigine.Isbn);
