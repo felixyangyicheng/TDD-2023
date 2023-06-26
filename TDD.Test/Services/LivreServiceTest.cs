@@ -145,6 +145,25 @@ namespace TDD.Test.Services
             Assert.AreEqual(livreMAJ.Editeur, livre.Editeur);
         }
 
+
+
+        [TestMethod]
+        public async Task DeleteBook_RemovesExistingBook()
+        {
+            // Arrange
+            var livreOrigine = new Livre { Isbn = "90909090909", Titre = "update Book 1", Auteur = "Author 3", Editeur = "Editeur 3", Format = Format.Broche, Disponible = true };
+            _db.Livres.Add(livreOrigine);
+            _db.SaveChanges();
+
+            // Act
+            var result = await _repository.Delete("90909090909");
+
+            // Assert
+            Assert.IsTrue(result is NoContentResult);
+            var livre = _db.Livres.FirstOrDefault(b => b.Isbn == livreOrigine.Isbn);
+            Assert.IsNull(livre);
+        }
+
     }
 }
 
