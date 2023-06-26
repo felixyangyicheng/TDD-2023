@@ -36,6 +36,11 @@ namespace TDD.Services
             throw new NotImplementedException();
         }
 
+        public Task<bool> Save()
+        {
+            throw new NotImplementedException();
+        }
+
         public Task SendRecallMailToUser(string Code)
         {
             throw new NotImplementedException();

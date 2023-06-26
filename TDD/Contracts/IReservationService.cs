@@ -13,7 +13,7 @@ namespace TDD.Contracts
 		public Task<List<Reservation>> GetCurrentReservationsByAdherentCode(string code);
         public Task<List<Reservation>> GetHistoricalReservationsByAdherentCode(string code);
 		public Task SendRecallMailToUser(string Code);
-
+        public Task<bool> Save();
     }
 }
 

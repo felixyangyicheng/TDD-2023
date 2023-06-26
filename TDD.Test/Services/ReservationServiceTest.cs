@@ -7,9 +7,12 @@ using TDD.Data;
 
 namespace TDD.Test.Services
 {
-	public class ReservationServiceTest
+    [TestClass]
+
+    public class ReservationServiceTest
 	{
-        private IReservationService _repository;
+        private IReservationService _reservation;
+        private ILivreService _livres;
         private BuDbContext _db;
 
 
@@ -63,7 +66,7 @@ namespace TDD.Test.Services
             _db.SaveChanges();
             // Act
             var current = reservations.Where(r => r.DateFin > DateTime.Now.AddMonths(-4)).ToList();
-            var result = await _repository.GetCurrentReservationsByAdherentCode("UserCode");
+            var result = await _reservation.GetCurrentReservationsByAdherentCode("UserCode");
             // Assert
             Assert.AreEqual(current.Count, result.Count());
             CollectionAssert.AreEqual(reservations, result);
@@ -83,7 +86,7 @@ namespace TDD.Test.Services
             _db.Reservations.AddRange(reservations);
             _db.SaveChanges();
             // Act
-            var result = await _repository.GetCurrentReservationsByAdherentCode("UserCode");
+            var result = await _reservation.GetCurrentReservationsByAdherentCode("UserCode");
 
             // Assert
             Assert.AreEqual(reservations.Count, result.Count());
@@ -105,7 +108,7 @@ namespace TDD.Test.Services
             _db.Reservations.AddRange(reservations);
             _db.SaveChanges();
             // Act
-            var result = await _repository.GetReservationById(1);
+            var result = await _reservation.GetReservationById(1);
             var reservation = reservations.FirstOrDefault(a => a.Id == 1);
             // Assert
             Assert.IsNotNull(result);
@@ -118,7 +121,7 @@ namespace TDD.Test.Services
             var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
 
             // Act
-            var result = await _repository.Create(reservation);
+            var result = await _reservation.Create(reservation);
 
             // Assert
             var newReservation = _db.Reservations.FirstOrDefault(b => b.Isbn == reservation.Isbn);
@@ -137,7 +140,7 @@ namespace TDD.Test.Services
             var reservationMAJ = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(3) };
 
             // Act
-            var result = await _repository.Update(1, reservationMAJ);
+            var result = await _reservation.Update(1, reservationMAJ);
 
             // Assert
             Assert.IsTrue(result);
@@ -155,13 +158,30 @@ namespace TDD.Test.Services
             _db.Reservations.Add(reservationOrigine);
             _db.SaveChanges();
             // Act
-            var result = await _repository.Delete(1);
+            var result = await _reservation.Delete(1);
             // Assert
             Assert.IsTrue(result);
             var reservation = _db.Reservations.FirstOrDefault(b => b.Isbn == reservationOrigine.Isbn);
             Assert.IsNull(reservation);
         }
         #endregion
+
+        #region BookAvailability
+        [TestMethod]
+        public async Task SetBookAvailabilityToFalse_OnReservationCreated()
+        {
+            // Arrange
+            var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
+
+            // Act
+            var createReservation = await _reservation.Create(reservation);
+            var livreResult = await _livres.GetBookByIsbn("90909090909");
+            // Assert
+            Assert.IsFalse(livreResult.Disponible);
+
+        }
+        #endregion
+
         #region SetEnd
         [TestMethod]
         public async Task SetEndOfReservation_ReturnTrue()
@@ -171,7 +191,7 @@ namespace TDD.Test.Services
             _db.Reservations.Add(reservation);
             _db.SaveChanges();
             // Act
-            var result = await _repository.SetEnd(1);
+            var result = await _reservation.SetEnd(1);
             // Assert
             Assert.IsTrue(result);
 
@@ -184,11 +204,11 @@ namespace TDD.Test.Services
             _db.Reservations.Add(reservation);
             _db.SaveChanges();
             // Act
-            var result = await _repository.SetEnd(1);
+            var result = await _reservation.SetEnd(1);
             // Assert
-            var setEndDateReservation = await _repository.GetReservationById(1);
+            var setEndDateReservation = await _reservation.GetReservationById(1);
 
-            Assert.IsTrue(setEndDateReservation.DateFin < reservation.DateFin);
+            Assert.IsTrue(setEndDateReservation.DateFin < reservation.DateFin); 
 
         }
         #endregion
@@ -243,7 +263,7 @@ namespace TDD.Test.Services
             var reservationOverflow = new Reservation { Isbn = "9780123456789", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
 
             // Act
-            var result = await _repository.Create(reservationOverflow);
+            var result = await _reservation.Create(reservationOverflow);
             // Assert
             Assert.IsFalse(result);
  

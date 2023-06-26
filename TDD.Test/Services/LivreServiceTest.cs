@@ -5,6 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using TDD.Contracts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.InMemory;
+using Microsoft.EntityFrameworkCore.Sqlite;
+
+
 
 using TDD.Data;
 using System.Text;
@@ -34,35 +38,46 @@ namespace TDD.Test.Services
 
             _db = new BuDbContext(options);
             _db.Database.EnsureCreated();
-        }
-
-        [TestCleanup]
-        public void TestCleanup()
-        {
-            _db.Database.EnsureDeleted();
-            _db.Dispose();
-        }
-
-        [TestMethod]
-        public async Task GetBooks_ReturnsAllBooks()
-        {
-            // Arrange
             var livres = new List<Livre>
             {
                 new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
                 new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
                 new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
-       
+
             };
             _db.Livres.AddRange(livres);
             _db.SaveChanges();
+        }
 
-            // Act
-            var result = await _repository.GetAllBooks();
 
-            // Assert
-            Assert.AreEqual(livres.Count, result.Count());
-            CollectionAssert.AreEqual(livres, result);
+        [TestMethod]
+        public async Task GetBooks_ReturnsAllBooks()
+        {
+            try
+            {
+
+                // Arrange
+                var livres = new List<Livre>
+                {
+                    new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                    new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
+                    new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+       
+                };
+                _db.Livres.AddRange(livres);
+                _db.SaveChanges();
+
+                // Act
+                var result = await _repository.GetAllBooks();
+
+                // Assert
+                Assert.AreEqual(livres.Count, result.Count());
+                CollectionAssert.AreEqual(livres, result);
+            }
+            catch (Exception ex)
+            {
+                throw (ex);
+            }
         }
         [TestMethod]
         public async Task GetBook_ReturnsBookByIsbn()
@@ -217,6 +232,14 @@ namespace TDD.Test.Services
             // Assert
             Assert.AreEqual(livesTitre.Count, result.Count());
             CollectionAssert.AreEqual(livres, result);
+        }
+
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            _db.Database.EnsureDeleted();
+            _db.Dispose();
         }
     }
 }

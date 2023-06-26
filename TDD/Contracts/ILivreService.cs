@@ -13,6 +13,8 @@ namespace TDD.Contracts
 		public Task<List<Livre>> GetBooksByAuthorName(string authorName);
         public Task<List<Livre>> GetAllBooks();
         public Task<List<Livre>> GetAvailableBooks();
+        public Task<bool> Save();
+
     }
 }
 
