@@ -14,34 +14,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace TDD.Test.Services
 {
 
-    //public class LivreService
-    //{
-    //    private readonly ILivreService _repository;
-    //    private readonly BuDbContext _db;
-
-    //    public LivreService(ILivreService repository)
-    //    {
-    //        _repository = repository;
-    //    }
-    //    public LivreService(BuDbContext db)
-    //    {
-    //        _db = db;
-    //    }
-
-    //    //public int Version
-    //    //{
-    //    //    get => _repository.Version;
-    //    //    set => _repository.Version = value;
-    //    //}
-
-    //    public Task<List<Livre>> GetList() => _repository.GetAllBooks();
-
-    //    public Task<bool> Update(Livre model) => _repository.Update(model.Isbn, model);
-
-    //    public Task<Livre> GetBookByIsbn(string id) => _repository.GetBookByIsbn(id);
-
-    //    public Task<bool> Delete(Livre model) => _repository.Delete(model.Isbn);
-    //}
     [TestClass]
     public class LivreServiceTest
 	{
@@ -121,6 +93,7 @@ namespace TDD.Test.Services
             // Assert
             var livreCree = _db.Livres.FirstOrDefault(b => b.Isbn == livre.Isbn);
             Assert.IsNotNull(livreCree);
+            Assert.IsTrue(result);
             Assert.AreEqual(livre, livreCree);
         }
         [TestMethod]
@@ -137,16 +110,14 @@ namespace TDD.Test.Services
             var result = await _repository.Update("90909090909", livreMAJ);
 
             // Assert
-            Assert.IsTrue(result is NoContentResult);
+            Assert.IsTrue(result);
             var livre = _db.Livres.FirstOrDefault(b => b.Isbn == livreOrigine.Isbn);
             Assert.IsNotNull(livre);
+            Assert.IsTrue(result);
             Assert.AreEqual(livreMAJ.Titre, livre.Titre);
             Assert.AreEqual(livreMAJ.Auteur, livre.Auteur);
             Assert.AreEqual(livreMAJ.Editeur, livre.Editeur);
         }
-
-
-
         [TestMethod]
         public async Task DeleteBook_RemovesExistingBook()
         {
@@ -159,7 +130,7 @@ namespace TDD.Test.Services
             var result = await _repository.Delete("90909090909");
 
             // Assert
-            Assert.IsTrue(result is NoContentResult);
+            Assert.IsTrue(result);
             var livre = _db.Livres.FirstOrDefault(b => b.Isbn == livreOrigine.Isbn);
             Assert.IsNull(livre);
         }
