@@ -164,6 +164,73 @@ namespace TDD.Test.Services
             Assert.IsNull(livre);
         }
 
+        [TestMethod]
+        public async Task GetBooks_ReturnsAvailableBooks()
+        {
+            // Arrange
+            var livres = new List<Livre>
+            {
+                new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=false },
+                new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+
+            };
+            _db.Livres.AddRange(livres);
+            _db.SaveChanges();
+
+            // Act
+            var result = await _repository.GetAvailableBooks();
+
+            // Assert
+            Assert.AreEqual(livres.Count, result.Count());
+            CollectionAssert.AreEqual(livres, result);
+        }
+
+        [TestMethod]
+        public async Task GetBooks_ReturnsBooksByAuthorName()
+        {
+            // Arrange
+            var livres = new List<Livre>
+            {
+                new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 1", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=false },
+                new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+
+            };
+            _db.Livres.AddRange(livres);
+            _db.SaveChanges();
+
+            // Act
+            var result = await _repository.GetBooksByAuthorName("Author 1");
+
+            var livesAuthor1 = livres.Where(a => a.Auteur == "Author 1").ToList();
+            // Assert
+            Assert.AreEqual(livesAuthor1.Count, result.Count());
+            CollectionAssert.AreEqual(livres, result);
+        }
+
+        [TestMethod]
+        public async Task GetBooks_ReturnsBooksByTitle()
+        {
+            // Arrange
+            var livres = new List<Livre>
+            {
+                new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 1", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=false },
+                new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+
+            };
+            _db.Livres.AddRange(livres);
+            _db.SaveChanges();
+
+            // Act
+            var result = await _repository.GetBooksByTitle("Book");
+
+            var livesTitre = livres.Where(a => a.Titre.Contains("Book")).ToList();
+            // Assert
+            Assert.AreEqual(livesTitre.Count, result.Count());
+            CollectionAssert.AreEqual(livres, result);
+        }
     }
 }
 
