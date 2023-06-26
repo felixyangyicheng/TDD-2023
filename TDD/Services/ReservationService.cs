@@ -11,6 +11,14 @@ namespace TDD.Services
         {
             this._rese = rese;
         }
+        private readonly BuDbContext _db;
+
+        public ReservationService(
+            BuDbContext db
+            )
+        {
+            _db = db;
+        }
         public Task<bool> Create(Reservation reservation)
         {
             throw new NotImplementedException();
