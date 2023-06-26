@@ -21,12 +21,12 @@ namespace TDD.Services
             throw new NotImplementedException();
         }
 
-        public Task<List<Reservation>> GetCurrentReservationsByAdherentCode(int code)
+        public Task<List<Reservation>> GetCurrentReservationsByAdherentCode(string code)
         {
             throw new NotImplementedException();
         }
 
-        public Task<List<Reservation>> GetHistoricalReservationsByAdherentCode(int code)
+        public Task<List<Reservation>> GetHistoricalReservationsByAdherentCode(string code)
         {
             throw new NotImplementedException();
         }
