@@ -28,9 +28,15 @@ namespace TDD.Services
             return await Save();
         }
 
-        public Task<bool> Delete(string isbn)
+        public async Task<bool> Delete(string isbn)
         {
-            throw new NotImplementedException();
+            var livre=await _db.Livres.FirstOrDefaultAsync(a=>a.Isbn == isbn);
+            if (livre != null)
+            {
+
+                _db.Livres.Remove(livre);
+            }
+            return await Save();
         }
 
 
@@ -45,19 +51,22 @@ namespace TDD.Services
 
         }
 
-        public Task<Livre> GetBookByIsbn(string isbn)
+        public async Task<Livre> GetBookByIsbn(string isbn)
         {
-            throw new NotImplementedException();
+            return await _db.Livres.FirstOrDefaultAsync(a => a.Isbn == isbn);
         }
 
-        public Task<List<Livre>> GetBooksByAuthorName(string authorName)
+        public async Task<List<Livre>> GetBooksByAuthorName(string authorName)
         {
-            throw new NotImplementedException();
+            return await _db.Livres.Where(a => a.Auteur == authorName)
+                .ToListAsync();
+
         }
 
-        public Task<List<Livre>> GetBooksByTitle(string name)
+        public async Task<List<Livre>> GetBooksByTitle(string name)
         {
-            throw new NotImplementedException();
+            return await _db.Livres.Where(a => a.Titre == name)
+            .ToListAsync();
         }
 
         public async Task<bool> Save()
@@ -66,9 +75,15 @@ namespace TDD.Services
             return changes > 0;
         }
 
-        public Task<bool> Update(string isbn, Livre livre)
+        public async Task<bool> Update(string isbn, Livre livre)
         {
-            throw new NotImplementedException();
+            var origine = await _db.Livres.FirstOrDefaultAsync(a => a.Isbn == isbn);
+            if (origine != null)
+            {
+
+                _db.Livres.Update(livre);
+            }
+            return await Save();
         }
     }
 }
