@@ -14,15 +14,13 @@ public class Program
 
         var builder = WebApplication.CreateBuilder(args);
         
-        var connString = builder.Configuration.GetConnectionString("sqlite");
-        builder.Services.AddDbContextPool<BuDbContext>(options =>
-        {
-            options.UseSqlite(connString);
-        });
+        var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+        builder.Services.AddDbContext<BuDbContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString(connString)));
 
         Console.WriteLine("yes");
 
-                   var app = builder.Build();
+        var app = builder.Build();
         app.Run();
     }
 }

@@ -15,6 +15,9 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.0.2" />
     <PackageReference Include="coverlet.collector" Version="3.2.0" />
     <PackageReference Include="Moq" Version="4.18.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.8" />
+    <PackageReference Include="SQLite" Version="3.13.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="7.0.8" />
   </ItemGroup>
 
   <ItemGroup>

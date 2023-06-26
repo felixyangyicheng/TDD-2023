@@ -37,4 +37,11 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Migrations\20230626075328_init.cs" />
+    <Compile Remove="Migrations\20230626075328_init.Designer.cs" />
+    <Compile Remove="Migrations\20230626080939_init.cs" />
+    <Compile Remove="Migrations\20230626080939_init.Designer.cs" />
+    <Compile Remove="Migrations\BuDbContextModelSnapshot.cs" />
+  </ItemGroup>
 </Project>

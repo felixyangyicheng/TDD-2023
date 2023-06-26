@@ -8,136 +8,143 @@ using Microsoft.EntityFrameworkCore;
 
 using TDD.Data;
 using System.Text;
+using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TDD.Test.Services
 {
 
-    public class LivreService
-    {
-        private readonly ILivreService _repository;
-        private readonly BuDbContext _db;
+    //public class LivreService
+    //{
+    //    private readonly ILivreService _repository;
+    //    private readonly BuDbContext _db;
 
-        public LivreService(ILivreService repository)
-        {
-            _repository = repository;
-        }
-        public LivreService(BuDbContext db)
-        {
-            _db = db;
-        }
+    //    public LivreService(ILivreService repository)
+    //    {
+    //        _repository = repository;
+    //    }
+    //    public LivreService(BuDbContext db)
+    //    {
+    //        _db = db;
+    //    }
 
-        //public int Version
-        //{
-        //    get => _repository.Version;
-        //    set => _repository.Version = value;
-        //}
+    //    //public int Version
+    //    //{
+    //    //    get => _repository.Version;
+    //    //    set => _repository.Version = value;
+    //    //}
 
-        public Task<List<Livre>> GetList() => _repository.GetAllBooks();
+    //    public Task<List<Livre>> GetList() => _repository.GetAllBooks();
 
-        public Task<bool> Update(Livre model) => _repository.Update(model.Isbn, model);
+    //    public Task<bool> Update(Livre model) => _repository.Update(model.Isbn, model);
 
-        public Task<Livre> GetBookByIsbn(string id) => _repository.GetBookByIsbn(id);
+    //    public Task<Livre> GetBookByIsbn(string id) => _repository.GetBookByIsbn(id);
 
-        public Task<bool> Delete(Livre model) => _repository.Delete(model.Isbn);
-    }
+    //    public Task<bool> Delete(Livre model) => _repository.Delete(model.Isbn);
+    //}
     [TestClass]
     public class LivreServiceTest
 	{
-        //static IWebHost _webHost = null;
-        //static T GetService<T>()
-        //{
-        //    var scope = _webHost.Services.CreateScope();
-        //    return scope.ServiceProvider.GetRequiredService<T>();
-        //}
+        private  ILivreService _repository;
+        private  BuDbContext _db;
 
-        //[ClassInitialize]
-        //public static void Init(TestContext testContext)
-        //{
-        //    _webHost = WebHost.CreateDefaultBuilder()
-        //        .ConfigureServices(a =>
-        //    {
-        //        a.AddDbContextPool<BuDbContext>(options =>
-        //        {
-        //            options.UseSqlite("");
-        //        });
-        //    }).Build();
-        //}
+
         [TestInitialize]
         public void TestInitialize()
         {
+            // Utilisation de SQLite en mémoire pour les tests
+            var connection = new SqliteConnection("DataSource=:memory:");
+            connection.Open();
 
+            var options = new DbContextOptionsBuilder<BuDbContext>()
+                .UseSqlite(connection)
+                .Options;
+
+            _db = new BuDbContext(options);
+            _db.Database.EnsureCreated();
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
+            _db.Database.EnsureDeleted();
+            _db.Dispose();
         }
+
         [TestMethod]
-
-
-
-        //public async Task<Livre> Get_1_Book()
-        //{
-        //    var livreService = new Mock<ILivreService>();
-        //    livreService.Setup(x => x.GetBookByIsbn("9090909090")).ReturnsAsync(new Livre ("9090909090","yes", "yes", "yes", Format.GrandFormat, true));
-        //    return await livreService.Object.GetBookByIsbn("9090909090");
-        //}
-
-        public void Insert()
+        public async Task GetBooks_ReturnsAllBooks()
         {
-
-            var dbPath = "test.sqlite";
-            if (File.Exists(dbPath)) File.Delete(dbPath);
-
-            var toDb = new Livre
+            // Arrange
+            var livres = new List<Livre>
             {
-         Isbn="9090909090",
-                Auteur="yes",
-                Editeur="yes",
-                Titre="yes", Format=Format.GrandFormat, Disponible=true
+                new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
+                new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+       
             };
-     
-        }
+            _db.Livres.AddRange(livres);
+            _db.SaveChanges();
 
-        public void Create_Book_with_incomplet_info()
-        {
-            try{
+            // Act
+            var result = await _repository.GetAllBooks();
 
-            }
-            catch
-            {
-                Assert.ThrowsException<NullReferenceException>(() => "livre avec informations incomplètes");
-            }
+            // Assert
+            Assert.AreEqual(livres.Count, result.Count());
+            CollectionAssert.AreEqual(livres, result);
         }
         [TestMethod]
-        public void Update_Book_with_incomplet_info()
+        public async Task GetBook_ReturnsBookByIsbn()
         {
+            // Arrange
+            var livre = new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur = "Editeur 1", Format = Format.Broche, Disponible = true };
 
-            Assert.Fail();
+            _db.Livres.Add(livre);
+            _db.SaveChanges();
+
+            // Act
+            var result = await _repository.GetBookByIsbn("90909090909");
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(livre.Isbn, result.Isbn);
+        }
+
+        [TestMethod]
+        public async Task CreateBook_AddsNewBook()
+        {
+            // Arrange
+            var livre = new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur = "Editeur 1", Format = Format.Broche, Disponible = true };
+
+            // Act
+            var result = await _repository.Create(livre);
+
+            // Assert
+            var livreCree = _db.Livres.FirstOrDefault(b => b.Isbn == livre.Isbn);
+            Assert.IsNotNull(livreCree);
+            Assert.AreEqual(livre, livreCree);
         }
         [TestMethod]
-        public void Delete_Book_with_reservation()
+        public async Task UpdateBook_UpdatesExistingBook()
         {
-            
-            //Assert.ThrowsException<UnhandledExceptionEventArgs>(()=> )
+            // Arrange
+            var livreOrigine = new Livre { Isbn = "90909090909", Titre = "original Book 1", Auteur = "Author 2", Editeur = "Editeur 2", Format = Format.Broche, Disponible = true };
+            _db.Livres.Add(livreOrigine);
+            _db.SaveChanges();
+
+            var livreMAJ = new Livre { Isbn = "90909090909", Titre = "update Book 1", Auteur = "Author 3", Editeur = "Editeur 3", Format = Format.Broche, Disponible = true };
+
+            // Act
+            var result = await _repository.Update("90909090909", livreMAJ);
+
+            // Assert
+            Assert.IsTrue(result is NoContentResult);
+            var livre = _db.Livres.FirstOrDefault(b => b.Isbn == livreOrigine.Isbn);
+            Assert.IsNotNull(livre);
+            Assert.AreEqual(livreMAJ.Titre, livre.Titre);
+            Assert.AreEqual(livreMAJ.Auteur, livre.Auteur);
+            Assert.AreEqual(livreMAJ.Editeur, livre.Editeur);
         }
 
-
-        [TestMethod]
-        public void TestMethod1()
-        {
-            var dbPath = "test.sqlite";
-            if (File.Exists(dbPath)) File.Delete(dbPath);
-            var opt = new DbContextOptionsBuilder<BuDbContext>()
-                .UseSqlite($"data source={dbPath}").Options;
-            var ctx = new BuDbContext(opt);
-
-            Assert.IsTrue(ctx.Database.EnsureCreated());
-            ctx.Database.EnsureCreated();
-            var resp = new LivreService(ctx);
-            Assert.AreEqual(ctx.Livres.Count(), 0);
-          
-        }
     }
 }
 
