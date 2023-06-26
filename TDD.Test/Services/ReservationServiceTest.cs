@@ -41,6 +41,10 @@ namespace TDD.Test.Services
             _db.Database.EnsureDeleted();
             _db.Dispose();
         }
+
+        #region CRUD
+
+
         [TestMethod]
         public async Task GetReservation_ReturnsUserCurrentReservations()
         {
@@ -144,7 +148,7 @@ namespace TDD.Test.Services
             Assert.AreEqual(reservationMAJ.DateFin, reservation.DateFin);
         }
         [TestMethod]
-        public async Task DeleteBook_RemovesExistingBook()
+        public async Task DeleteReservation_RemovesExistingReservation()
         {
             // Arrange
             var reservationOrigine = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
@@ -157,6 +161,94 @@ namespace TDD.Test.Services
             var reservation = _db.Reservations.FirstOrDefault(b => b.Isbn == reservationOrigine.Isbn);
             Assert.IsNull(reservation);
         }
+        #endregion
+        #region SetEnd
+        [TestMethod]
+        public async Task SetEndOfReservation_ReturnTrue()
+        {
+            // Arrange
+            var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
+            _db.Reservations.Add(reservation);
+            _db.SaveChanges();
+            // Act
+            var result = await _repository.SetEnd(1);
+            // Assert
+            Assert.IsTrue(result);
+
+        }
+        [TestMethod]
+        public async Task SetEndOfReservation_EndDateValid()
+        {
+            // Arrange
+            var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
+            _db.Reservations.Add(reservation);
+            _db.SaveChanges();
+            // Act
+            var result = await _repository.SetEnd(1);
+            // Assert
+            var setEndDateReservation = await _repository.GetReservationById(1);
+
+            Assert.IsTrue(setEndDateReservation.DateFin < reservation.DateFin);
+
+        }
+        #endregion
+        #region Validity reservation
+
+        [TestMethod]
+        public void IsValidDuration_ValidDuration_4Months_ReturnsTrue()
+        {
+            // Arrange
+            var reservation = new Reservation { Isbn = "9780123456789", AdherentCode= "UserCode",DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
+            // Act
+            var isValid = reservation.IsValidDuration4Months();
+            // Assert
+            Assert.IsTrue(isValid);
+        }
+
+        [TestMethod]
+        public void IsValidDuration_InValidDuration_4Months_ReturnsFalse()
+        {
+            // Arrange
+            var reservation = new Reservation { Isbn = "9780123456789", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddMonths(6) };
+            // Act
+            var isValid = reservation.IsValidDuration4Months();
+            // Assert
+            Assert.IsFalse(isValid);
+        }
+
+        [TestMethod]
+        public void IsValidDuration_InValidDuration_EndDateBeforeStartDate_ReturnsFalse()
+        {
+            // Arrange
+            var reservation = new Reservation { Isbn = "9780123456789", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(-1) };
+            // Act
+            var isValid = reservation.IsValidDuration4Months();
+            // Assert
+            Assert.IsFalse(isValid);
+        }
+
+        [TestMethod]
+        public async void IsValidReservationQuota_InValidQuota_MoreThan3_ReturnsFalse()
+        {
+            // Arrange
+            var reservations = new List<Reservation>
+            {
+                new Reservation { Id=1,Isbn = "90909090909", AdherentCode="UserCode",DateDebut=DateTime.Now, DateFin=DateTime.Now.AddDays(2) },
+                new Reservation { Id=2,Isbn = "90909090901", AdherentCode="UserCode",DateDebut=DateTime.Now, DateFin=DateTime.Now.AddDays(2)},
+                new Reservation { Id=3,Isbn = "90909090902", AdherentCode="UserCode",DateDebut=DateTime.Now, DateFin=DateTime.Now.AddMonths(1)},
+            };
+            _db.Reservations.AddRange(reservations);
+            _db.SaveChanges();
+
+            var reservationOverflow = new Reservation { Isbn = "9780123456789", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
+
+            // Act
+            var result = await _repository.Create(reservationOverflow);
+            // Assert
+            Assert.IsFalse(result);
+ 
+        }
+        #endregion
 
     }
 }

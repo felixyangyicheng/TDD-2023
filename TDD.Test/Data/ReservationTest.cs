@@ -1,11 +1,12 @@
 ﻿using System;
+using TDD.Data;
+
 namespace TDD.Test.Data
 {
-	public class ReservationTest
+    [TestClass]
+    public class ReservationTest
 	{
-		public ReservationTest()
-		{
-		}
-	}
+
+    }
 }
 

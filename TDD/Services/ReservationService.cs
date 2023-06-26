@@ -41,6 +41,11 @@ namespace TDD.Services
             throw new NotImplementedException();
         }
 
+        public Task<bool> SetEnd(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<bool> Update(int id, Reservation reservation)
         {
             throw new NotImplementedException();
