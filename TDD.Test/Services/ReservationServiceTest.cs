@@ -79,18 +79,13 @@ namespace TDD.Test.Services
             // Act
             var current = reservations.Where(r => r.DateFin > DateTime.Now.AddMonths(-4)).ToList();
 
-            try
-            {
+         
 
             var result = await _reservationLocalRepo.GetCurrentReservationsByAdherentCode("UserCode");
             // Assert
             Assert.AreEqual(current.Count, result.Count());
-            CollectionAssert.AreEqual(reservations, result);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            CollectionAssert.AreEqual(current, result);
+        
         }
         [TestMethod]
         public async Task GetReservation_ReturnsUserHistoricalReservations()
@@ -104,14 +99,14 @@ namespace TDD.Test.Services
                 new Reservation { Id=3,Isbn = "90909090902", AdherentCode="UserCode",DateDebut=DateTime.Now.AddMonths(-8), DateFin=DateTime.Now.AddMonths(-6)},
                 new Reservation { Id=4,Isbn = "90909090903", AdherentCode="UserCode",DateDebut=DateTime.Now.AddMonths(-8), DateFin=DateTime.Now.AddMonths(-6)},
             };
-            _db.Reservations.AddRange(reservations);
-            _db.SaveChanges();
+            context.Reservations.AddRange(reservations);
+            context.SaveChanges();
             // Act
-            var result = await _reservation.GetCurrentReservationsByAdherentCode("UserCode");
-
+            var result = await _reservationLocalRepo.GetHistoricalReservationsByAdherentCode("UserCode");
+            var current = reservations.ToList();
             // Assert
-            Assert.AreEqual(reservations.Count, result.Count());
-            CollectionAssert.AreEqual(reservations, result);
+            Assert.AreEqual(current.Count, result.Count());
+            CollectionAssert.AreEqual(current, result);
         }
 
         [TestMethod]
@@ -126,10 +121,10 @@ namespace TDD.Test.Services
                 new Reservation { Id=4,Isbn = "90909090903", AdherentCode="UserCode",DateDebut=DateTime.Now.AddMonths(-8), DateFin=DateTime.Now.AddMonths(-6)},
 
             };
-            _db.Reservations.AddRange(reservations);
-            _db.SaveChanges();
+            context.Reservations.AddRange(reservations);
+            context.SaveChanges();
             // Act
-            var result = await _reservation.GetReservationById(1);
+            var result = await _reservationLocalRepo.GetReservationById(1);
             var reservation = reservations.FirstOrDefault(a => a.Id == 1);
             // Assert
             Assert.IsNotNull(result);
@@ -142,10 +137,10 @@ namespace TDD.Test.Services
             var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
 
             // Act
-            var result = await _reservation.Create(reservation);
+            var result = await _reservationLocalRepo.Create(reservation);
 
             // Assert
-            var newReservation = _db.Reservations.FirstOrDefault(b => b.Isbn == reservation.Isbn);
+            var newReservation = context.Reservations.FirstOrDefault(b => b.Isbn == reservation.Isbn);
             Assert.IsNotNull(newReservation);
             Assert.IsTrue(result);
             Assert.AreEqual(reservation, newReservation);
@@ -155,17 +150,17 @@ namespace TDD.Test.Services
         {
             // Arrange
             var reservationOrigine =   new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
-            _db.Reservations.Add(reservationOrigine);
-            _db.SaveChanges();
+            context.Reservations.Add(reservationOrigine);
+            context.SaveChanges();
 
             var reservationMAJ = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(3) };
 
             // Act
-            var result = await _reservation.Update(1, reservationMAJ);
+            var result = await _reservationLocalRepo.Update(1, reservationMAJ);
 
             // Assert
             Assert.IsTrue(result);
-            var reservation = _db.Reservations.FirstOrDefault(b => b.Isbn == reservationOrigine.Isbn);
+            var reservation = context.Reservations.FirstOrDefault(b => b.Isbn == reservationOrigine.Isbn);
             Assert.IsNotNull(reservation);
             Assert.AreEqual(reservationMAJ.AdherentCode, reservation.AdherentCode);
             Assert.AreEqual(reservationMAJ.DateDebut, reservation.DateDebut);
@@ -176,13 +171,13 @@ namespace TDD.Test.Services
         {
             // Arrange
             var reservationOrigine = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
-            _db.Reservations.Add(reservationOrigine);
-            _db.SaveChanges();
+            context.Reservations.Add(reservationOrigine);
+            context.SaveChanges();
             // Act
-            var result = await _reservation.Delete(1);
+            var result = await _reservationLocalRepo.Delete(1);
             // Assert
             Assert.IsTrue(result);
-            var reservation = _db.Reservations.FirstOrDefault(b => b.Isbn == reservationOrigine.Isbn);
+            var reservation = context.Reservations.FirstOrDefault(b => b.Isbn == reservationOrigine.Isbn);
             Assert.IsNull(reservation);
         }
         #endregion
@@ -195,8 +190,8 @@ namespace TDD.Test.Services
             var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
 
             // Act
-            var createReservation = await _reservation.Create(reservation);
-            var livreResult = await _livres.GetBookByIsbn("90909090909");
+            var createReservation = await _reservationLocalRepo.Create(reservation);
+            var livreResult = await _livresLocalRepo.GetBookByIsbn("90909090909");
             // Assert
             Assert.IsFalse(livreResult.Disponible);
 
@@ -209,10 +204,10 @@ namespace TDD.Test.Services
         {
             // Arrange
             var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
-            _db.Reservations.Add(reservation);
-            _db.SaveChanges();
+            context.Reservations.Add(reservation);
+            context.SaveChanges();
             // Act
-            var result = await _reservation.SetEnd(1);
+            var result = await _reservationLocalRepo.SetEnd(1);
             // Assert
             Assert.IsTrue(result);
 
@@ -222,12 +217,12 @@ namespace TDD.Test.Services
         {
             // Arrange
             var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
-            _db.Reservations.Add(reservation);
-            _db.SaveChanges();
+            context.Reservations.Add(reservation);
+            context.SaveChanges();
             // Act
-            var result = await _reservation.SetEnd(1);
+            var result = await _reservationLocalRepo.SetEnd(1);
             // Assert
-            var setEndDateReservation = await _reservation.GetReservationById(1);
+            var setEndDateReservation = await _reservationLocalRepo.GetReservationById(1);
 
             Assert.IsTrue(setEndDateReservation.DateFin < reservation.DateFin); 
 
@@ -278,13 +273,13 @@ namespace TDD.Test.Services
                 new Reservation { Id=2,Isbn = "90909090901", AdherentCode="UserCode",DateDebut=DateTime.Now, DateFin=DateTime.Now.AddDays(2)},
                 new Reservation { Id=3,Isbn = "90909090902", AdherentCode="UserCode",DateDebut=DateTime.Now, DateFin=DateTime.Now.AddMonths(1)},
             };
-            _db.Reservations.AddRange(reservations);
-            _db.SaveChanges();
+            context.Reservations.AddRange(reservations);
+            context.SaveChanges();
 
             var reservationOverflow = new Reservation { Isbn = "9780123456789", AdherentCode = "UserCode", DateDebut = DateTime.Now, DateFin = DateTime.Now.AddDays(2) };
 
             // Act
-            var result = await _reservation.Create(reservationOverflow);
+            var result = await _reservationLocalRepo.Create(reservationOverflow);
             // Assert
             Assert.IsFalse(result);
  

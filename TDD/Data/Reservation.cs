@@ -30,6 +30,11 @@ namespace TDD.Data
         public bool IsValidDuration4Months()
         {
             bool result = false;
+            var timeSpan = DateFin - DateDebut;
+            if (timeSpan.Value.TotalSeconds>0)
+            {
+                result = true;
+            }
             return result;
         }
 

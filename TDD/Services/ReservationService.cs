@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore;
 using TDD.Contracts;
 using TDD.Data;
 
@@ -19,34 +20,46 @@ namespace TDD.Services
         {
             _db = db;
         }
-        public Task<bool> Create(Reservation reservation)
+        public async Task<bool> Create(Reservation reservation)
         {
-            throw new NotImplementedException();
+            _db.Reservations.Add(reservation);
+            return await Save();
+
         }
 
-        public Task<bool> Delete(int id)
+        public async Task<bool> Delete(int id)
         {
-            throw new NotImplementedException();
+            var res = await _db.Reservations.FirstOrDefaultAsync(a => a.Id == id);
+            if (res != null)
+            {
+
+                _db.Reservations.Remove(res);
+            }
+            return await Save();
         }
 
-        public Task<List<Reservation>> GetCurrentReservationsByAdherentCode(string code)
+        public async Task<List<Reservation>> GetCurrentReservationsByAdherentCode(string code)
         {
-            throw new NotImplementedException();
+            return await _db.Reservations.Where(a => a.AdherentCode == code)
+                .Where(r => r.DateFin > DateTime.Now.AddMonths(-4)).ToListAsync();
         }
 
-        public Task<List<Reservation>> GetHistoricalReservationsByAdherentCode(string code)
+        public async Task<List<Reservation>> GetHistoricalReservationsByAdherentCode(string code)
         {
-            throw new NotImplementedException();
+            return await _db.Reservations.Where(a => a.AdherentCode == code).ToListAsync();
+
         }
 
-        public Task<Reservation> GetReservationById(int id)
+        public async Task<Reservation> GetReservationById(int id)
         {
-            throw new NotImplementedException();
+            return await _db.Reservations.FirstOrDefaultAsync(a=>a.Id==id);
+
         }
 
-        public Task<bool> Save()
+        public async Task<bool> Save()
         {
-            throw new NotImplementedException();
+            var changes = await _db.SaveChangesAsync();
+            return changes > 0;
         }
 
         public Task SendRecallMailToUser(string Code)
@@ -54,14 +67,22 @@ namespace TDD.Services
             throw new NotImplementedException();
         }
 
-        public Task<bool> SetEnd(int id)
+        public async Task<bool> SetEnd(int id)
         {
-            throw new NotImplementedException();
+            var res =await _db.Reservations.FirstOrDefaultAsync(a => a.Id == id);
+            res.DateFin = DateTime.Now;
+            return await Save();
         }
 
-        public Task<bool> Update(int id, Reservation reservation)
+        public async Task<bool> Update(int id, Reservation reservation)
         {
-            throw new NotImplementedException();
+            var origine = await _db.Reservations.FirstOrDefaultAsync(a => a.Id == reservation.Id);
+            if (origine != null)
+            {
+
+                _db.Reservations.Update(reservation);
+            }
+            return await Save();
         }
     }
 }
