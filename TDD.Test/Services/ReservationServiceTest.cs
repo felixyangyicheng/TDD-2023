@@ -39,12 +39,14 @@ namespace TDD.Test.Services
                 Civilite = "Monsieur",
                 DateNaissance = DateTime.Now.AddYears(-18),
             };
+            var livre = new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur = "Editeur 1", Format = Format.Broche, Disponible = true };
 
-             factory = new ConnectionFactory();
+            factory = new ConnectionFactory();
              context = factory.CreateContextForInMemory();
             _livresLocalRepo = new LivreService(context);
             _reservationLocalRepo = new ReservationService(context);
             context.Adherents.Add(user);
+            context.Livres.Add(livre);
             context.SaveChanges();
 
             _db.Adherents.Add(user);
@@ -78,8 +80,6 @@ namespace TDD.Test.Services
             context.SaveChanges();
             // Act
             var current = reservations.Where(r => r.DateFin > DateTime.Now.AddMonths(-4)).ToList();
-
-         
 
             var result = await _reservationLocalRepo.GetCurrentReservationsByAdherentCode("UserCode");
             // Assert
@@ -187,12 +187,15 @@ namespace TDD.Test.Services
         public async Task SetBookAvailabilityToFalse_OnReservationCreated()
         {
             // Arrange
-            var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
+            var reservation = new Reservation { Id = 10, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
 
             // Act
             var createReservation = await _reservationLocalRepo.Create(reservation);
             var livreResult = await _livresLocalRepo.GetBookByIsbn("90909090909");
             // Assert
+            Assert.IsNotNull(livreResult);
+            Assert.IsNotNull(livreResult.Disponible);
+
             Assert.IsFalse(livreResult.Disponible);
 
         }
@@ -216,13 +219,13 @@ namespace TDD.Test.Services
         public async Task SetEndOfReservation_EndDateValid()
         {
             // Arrange
-            var reservation = new Reservation { Id = 1, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
+            var reservation = new Reservation { Id = 9, Isbn = "90909090909", AdherentCode = "UserCode", DateDebut = DateTime.Now.AddDays(-30), DateFin = DateTime.Now.AddDays(30) };
             context.Reservations.Add(reservation);
             context.SaveChanges();
             // Act
             var result = await _reservationLocalRepo.SetEnd(1);
             // Assert
-            var setEndDateReservation = await _reservationLocalRepo.GetReservationById(1);
+            var setEndDateReservation = await _reservationLocalRepo.GetReservationById(9);
 
             Assert.IsTrue(setEndDateReservation.DateFin < reservation.DateFin); 
 

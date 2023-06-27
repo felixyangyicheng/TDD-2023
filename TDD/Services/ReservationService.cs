@@ -22,8 +22,27 @@ namespace TDD.Services
         }
         public async Task<bool> Create(Reservation reservation)
         {
+
             _db.Reservations.Add(reservation);
+            await Save();
+            var livre=await _db.Livres.FirstOrDefaultAsync(a => a.Isbn == reservation.Isbn);
+
+            try
+            {
+                livre.Disponible = false;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+          
+
+            _db.Livres.Update(livre);
+
+
             return await Save();
+           
+            
 
         }
 
@@ -58,8 +77,17 @@ namespace TDD.Services
 
         public async Task<bool> Save()
         {
+
+            try
+            {
             var changes = await _db.SaveChangesAsync();
+
             return changes > 0;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         public Task SendRecallMailToUser(string Code)
@@ -77,15 +105,10 @@ namespace TDD.Services
         public async Task<bool> Update(int id, Reservation reservation)
         {
 
-            try
-            {
-
-                _db.Reservations.Update(reservation);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+                var rm= await  _db.Reservations.FirstOrDefaultAsync(a => a.Id == id);
+                _db.Reservations.Remove(rm);
+                _db.Reservations.Add(reservation);
+     
                          
             
             return await Save();

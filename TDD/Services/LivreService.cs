@@ -85,12 +85,11 @@ namespace TDD.Services
 
         public async Task<bool> Update(string isbn, Livre livre)
         {
-            var origine = await _db.Livres.FirstOrDefaultAsync(a => a.Isbn == livre.Isbn);
-            if (origine != null)
-            {
+            var rm = await _db.Livres.FirstOrDefaultAsync(a => a.Isbn == isbn);
+            _db.Livres.Remove(rm);
+            _db.Livres.Add(livre);
 
-                _db.Livres.Update(livre);
-            }
+
             return await Save();
         }
     }

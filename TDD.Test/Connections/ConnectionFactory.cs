@@ -32,7 +32,7 @@ namespace TDD.Test.Connections
             var option = new DbContextOptionsBuilder<BuDbContext>()
                 .UseSqlite(connection)
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-
+              
                 .Options;
 
             var context = new BuDbContext(option);
