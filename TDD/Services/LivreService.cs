@@ -73,7 +73,7 @@ namespace TDD.Services
 
         public async Task<List<Livre>> GetBooksByTitle(string name)
         {
-            return await _db.Livres.Where(a => a.Titre == name)
+            return await _db.Livres.Where(a => a.Titre.Contains( name))
             .ToListAsync();
         }
 

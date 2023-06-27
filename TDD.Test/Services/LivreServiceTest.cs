@@ -99,27 +99,21 @@ namespace TDD.Test.Services
         [TestMethod]
         public async Task GetAllBooks_ReturnsAllBooks_Mock()
         {
-
+            //arrange
             _mockContext = new Mock<BuDbContext>();
-
             var livres = new List<Livre>
                 {
                     new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
                     new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
                     new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
-
                 }.AsQueryable();
-
             var mockSet = new Mock<DbSet<Livre>>();
-
             mockSet.As<IAsyncEnumerable<Livre>>()
                     .Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
                     .Returns(new TestAsyncEnumerator<Livre>(livres.AsEnumerable().GetEnumerator()));
-
             mockSet.As<IQueryable<Livre>>()
                 .Setup(m => m.Provider)
                 .Returns(new TestAsyncQueryProvider<Livre>(livres.AsQueryable().Provider));
-
             mockSet.As<IQueryable<Livre>>().Setup(m => m.Provider).Returns(livres.AsQueryable().Provider);
             mockSet.As<IQueryable<Livre>>().Setup(m => m.Expression).Returns(livres.AsQueryable().Expression);
             mockSet.As<IQueryable<Livre>>().Setup(m => m.ElementType).Returns(livres.AsQueryable().ElementType);
@@ -127,7 +121,7 @@ namespace TDD.Test.Services
 
             _mockContext.Setup(c => c.Livres).Returns(mockSet.Object);
             _livreService = new LivreService(_mockContext.Object);
-
+            //Act
             var result = await _livreService.GetAllBooks();
                 // Assert
                 Assert.IsNotNull(result);
@@ -151,6 +145,46 @@ namespace TDD.Test.Services
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(livre.Isbn, result.Isbn);
+        }
+        [TestMethod]
+        public async Task GetBook_ReturnsBookByIsbn_Mock()
+        {
+            //arrange
+            _mockContext = new Mock<BuDbContext>();
+            var livres = new List<Livre>
+                {
+                    new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                    new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
+                    new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+                }.AsQueryable();
+            var mockSet = new Mock<DbSet<Livre>>();
+            mockSet.As<IAsyncEnumerable<Livre>>()
+                    .Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
+                    .Returns(new TestAsyncEnumerator<Livre>(livres.AsEnumerable().GetEnumerator()));
+            mockSet.As<IQueryable<Livre>>()
+                .Setup(m => m.Provider)
+                .Returns(new TestAsyncQueryProvider<Livre>(livres.AsQueryable().Provider));
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.Provider).Returns(livres.AsQueryable().Provider);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.Expression).Returns(livres.AsQueryable().Expression);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.ElementType).Returns(livres.AsQueryable().ElementType);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.GetEnumerator()).Returns(livres.AsQueryable().GetEnumerator());
+
+            _mockContext.Setup(c => c.Livres).Returns(mockSet.Object);
+            _livreService = new LivreService(_mockContext.Object);
+            //Act
+            try
+            {
+
+            var result = await _livreService.GetBookByIsbn("90909090909");
+            Assert.AreEqual(result, livres.FirstOrDefault(a=>a.Isbn== "90909090909"));
+            // Assert
+            Assert.IsNotNull(result);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
         }
 
         [TestMethod]
@@ -256,9 +290,47 @@ namespace TDD.Test.Services
 
             // Assert
             Assert.AreEqual(livres.Where(a=>a.Disponible==true).ToList().Count, result.Count());
-            CollectionAssert.AreEqual(livres, result);
+            CollectionAssert.AreEqual(livres.Where(a => a.Disponible == true).ToList(), result);
         }
 
+
+
+        [TestMethod]
+        public async Task GetBooks_ReturnsAvailableBooks_Mock()
+        {
+            // Arrange
+            _mockContext = new Mock<BuDbContext>();
+            var livres = new List<Livre>
+                {
+                    new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                    new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
+                    new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+                }.AsQueryable();
+            var mockSet = new Mock<DbSet<Livre>>();
+            mockSet.As<IAsyncEnumerable<Livre>>()
+                    .Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
+                    .Returns(new TestAsyncEnumerator<Livre>(livres.AsEnumerable().GetEnumerator()));
+            mockSet.As<IQueryable<Livre>>()
+                .Setup(m => m.Provider)
+                .Returns(new TestAsyncQueryProvider<Livre>(livres.AsQueryable().Provider));
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.Provider).Returns(livres.AsQueryable().Provider);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.Expression).Returns(livres.AsQueryable().Expression);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.ElementType).Returns(livres.AsQueryable().ElementType);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.GetEnumerator()).Returns(livres.AsQueryable().GetEnumerator());
+
+            _mockContext.Setup(c => c.Livres).Returns(mockSet.Object);
+            _livreService = new LivreService(_mockContext.Object);
+
+            // Act
+      
+                var result = await _livreService.GetAvailableBooks();
+
+                // Assert
+                Assert.AreEqual(livres.Where(a => a.Disponible == true).ToList().Count, result.Count());
+                CollectionAssert.AreEqual(livres.ToList(), result);
+   
+    
+        }
         [TestMethod]
         public async Task GetBooks_ReturnsBooksByAuthorName()
         {
@@ -284,7 +356,7 @@ namespace TDD.Test.Services
             var livesAuthor1 = livres.Where(a => a.Auteur == "Author 1").ToList();
             // Assert
             Assert.AreEqual(livesAuthor1.Count, result.Count());
-            CollectionAssert.AreEqual(livres, result);
+            CollectionAssert.AreEqual(livesAuthor1, result);
         }
 
         [TestMethod]
@@ -313,7 +385,7 @@ namespace TDD.Test.Services
             var livesTitre = livres.Where(a => a.Titre.Contains("Book")).ToList();
             // Assert
             Assert.AreEqual(livesTitre.Count, result.Count());
-            CollectionAssert.AreEqual(livres, result);
+            CollectionAssert.AreEqual(livesTitre, result);
         }
 
 
@@ -323,6 +395,11 @@ namespace TDD.Test.Services
             _db.Database.EnsureDeleted();
             _db.Dispose();
         }
+
+
+
+
+
     }
 }
 

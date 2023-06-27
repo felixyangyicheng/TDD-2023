@@ -4,6 +4,8 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using TDD.Contracts;
 using TDD.Data;
+using TDD.Services;
+using TDD.Test.Connections;
 
 namespace TDD.Test.Services
 {
@@ -14,8 +16,10 @@ namespace TDD.Test.Services
         private IReservationService _reservation;
         private ILivreService _livres;
         private BuDbContext _db;
-
-
+        private BuDbContext context;
+        private ConnectionFactory factory;
+        private ReservationService _reservationLocalRepo;
+        private LivreService _livresLocalRepo;
         [TestInitialize]
         public void TestInitialize()
         {
@@ -35,6 +39,14 @@ namespace TDD.Test.Services
                 Civilite = "Monsieur",
                 DateNaissance = DateTime.Now.AddYears(-18),
             };
+
+             factory = new ConnectionFactory();
+             context = factory.CreateContextForInMemory();
+            _livresLocalRepo = new LivreService(context);
+            _reservationLocalRepo = new ReservationService(context);
+            context.Adherents.Add(user);
+            context.SaveChanges();
+
             _db.Adherents.Add(user);
             _db.SaveChanges();
         }
@@ -62,14 +74,23 @@ namespace TDD.Test.Services
 
             };
       
-            _db.Reservations.AddRange(reservations);
-            _db.SaveChanges();
+            context.Reservations.AddRange(reservations);
+            context.SaveChanges();
             // Act
             var current = reservations.Where(r => r.DateFin > DateTime.Now.AddMonths(-4)).ToList();
-            var result = await _reservation.GetCurrentReservationsByAdherentCode("UserCode");
+
+            try
+            {
+
+            var result = await _reservationLocalRepo.GetCurrentReservationsByAdherentCode("UserCode");
             // Assert
             Assert.AreEqual(current.Count, result.Count());
             CollectionAssert.AreEqual(reservations, result);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
         [TestMethod]
         public async Task GetReservation_ReturnsUserHistoricalReservations()
