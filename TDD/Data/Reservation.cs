@@ -35,6 +35,11 @@ namespace TDD.Data
             {
                 result = true;
             }
+            if (DateFin>DateDebut.AddMonths(4))
+            {
+                 result = false;
+
+            }
             return result;
         }
 

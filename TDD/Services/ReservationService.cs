@@ -76,12 +76,18 @@ namespace TDD.Services
 
         public async Task<bool> Update(int id, Reservation reservation)
         {
-            var origine = await _db.Reservations.FirstOrDefaultAsync(a => a.Id == reservation.Id);
-            if (origine != null)
+
+            try
             {
 
                 _db.Reservations.Update(reservation);
             }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+                         
+            
             return await Save();
         }
     }

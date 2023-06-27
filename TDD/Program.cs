@@ -19,7 +19,10 @@ public class Program
         
         var connString = builder.Configuration.GetConnectionString("DefaultConnection");
         builder.Services.AddDbContext<BuDbContext>(options =>
-        options.UseSqlite(builder.Configuration.GetConnectionString(connString)));
+        options
+        .UseSqlite(builder.Configuration.GetConnectionString(connString))
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+        );
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
