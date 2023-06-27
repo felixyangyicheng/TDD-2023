@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.InMemory;
 using Microsoft.EntityFrameworkCore.Sqlite;
 
-
+using Moq.EntityFrameworkCore;
 
 using TDD.Data;
 using System.Text;
@@ -16,6 +16,17 @@ using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
 using TDD.Test.Connections;
 using TDD.Services;
+using System.Net.Sockets;
+using System.Reflection.Metadata;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Xml;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using System.Net;
+using static System.Reflection.Metadata.BlobBuilder;
+using Microsoft.EntityFrameworkCore.Query;
+using static TDD.Test.Services.LivreServiceTest;
+using System.Linq.Expressions;
+using TDD.Test.Helpers;
 
 namespace TDD.Test.Services
 {
@@ -26,7 +37,8 @@ namespace TDD.Test.Services
         private  ILivreService _repository;
         private  BuDbContext _db;
 
-
+        private  Mock<BuDbContext> _mockContext;
+        private  LivreService _livreService;
 
         [TestInitialize]
         public void TestInitialize()
@@ -44,15 +56,7 @@ namespace TDD.Test.Services
 
 
             _repository = new LivreService(_db);
-            //var livres = new List<Livre>
-            //{
-            //    new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
-            //    new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
-            //    new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
 
-            //};
-            //_db.Livres.AddRange(livres);
-            //_db.SaveChanges();
         }
 
 
@@ -63,10 +67,8 @@ namespace TDD.Test.Services
             {
                 //Arrange    
                 var factory = new ConnectionFactory();
-
-                //Get the instance of BlogDBContext  
                 var context = factory.CreateContextForInMemory();
-                // Arrange
+
                 var livres = new List<Livre>
                 {
                     new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
@@ -78,7 +80,8 @@ namespace TDD.Test.Services
                 context.SaveChanges();
 
                 // Act
-                var result = await _repository.GetAllBooks();
+                var localRepo = new LivreService(context);
+                var result = await localRepo.GetAllBooks();
 
                 // Assert
                 Assert.AreEqual(livres.Count, result.Count());
@@ -89,6 +92,49 @@ namespace TDD.Test.Services
                 Console.WriteLine(ex.Message);
                 throw (ex);
             }
+        }
+
+
+
+        [TestMethod]
+        public async Task GetAllBooks_ReturnsAllBooks_Mock()
+        {
+
+            _mockContext = new Mock<BuDbContext>();
+
+            var livres = new List<Livre>
+                {
+                    new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1", Editeur="Editeur 1", Format=Format.Broche, Disponible=true },
+                    new Livre { Isbn = "90909090901", Titre = "Book 2", Auteur = "Author 2", Editeur="Editeur 2", Format=Format.GrandFormat, Disponible=true },
+                    new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
+
+                }.AsQueryable();
+
+            var mockSet = new Mock<DbSet<Livre>>();
+
+            mockSet.As<IAsyncEnumerable<Livre>>()
+                    .Setup(m => m.GetAsyncEnumerator(It.IsAny<CancellationToken>()))
+                    .Returns(new TestAsyncEnumerator<Livre>(livres.AsEnumerable().GetEnumerator()));
+
+            mockSet.As<IQueryable<Livre>>()
+                .Setup(m => m.Provider)
+                .Returns(new TestAsyncQueryProvider<Livre>(livres.AsQueryable().Provider));
+
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.Provider).Returns(livres.AsQueryable().Provider);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.Expression).Returns(livres.AsQueryable().Expression);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.ElementType).Returns(livres.AsQueryable().ElementType);
+            mockSet.As<IQueryable<Livre>>().Setup(m => m.GetEnumerator()).Returns(livres.AsQueryable().GetEnumerator());
+
+            _mockContext.Setup(c => c.Livres).Returns(mockSet.Object);
+            _livreService = new LivreService(_mockContext.Object);
+
+            var result = await _livreService.GetAllBooks();
+                // Assert
+                Assert.IsNotNull(result);
+                CollectionAssert.AreEqual(result, livres.ToList());
+  
+
+
         }
         [TestMethod]
         public async Task GetBook_ReturnsBookByIsbn()
@@ -129,12 +175,17 @@ namespace TDD.Test.Services
             // Arrange
             var livre = new Livre { Isbn = "90909090909", Titre = "Book 1", Auteur = "Author 1"};
 
-            // Act
-            var result = await _repository.Create(livre);
+    
+            var factory = new ConnectionFactory();
+            var context = factory.CreateContextForInMemory();
+            var localRepo = new LivreService(context);
+      
+            var result = await localRepo.Create(livre);
 
             // Assert
             var livreCree = _db.Livres.FirstOrDefault(b => b.Isbn == livre.Isbn);
             Assert.IsNull(livreCree);
+            Assert.Fail();
             Assert.IsFalse(result);
 
         }
@@ -143,17 +194,21 @@ namespace TDD.Test.Services
         {
             // Arrange
             var livreOrigine = new Livre { Isbn = "90909090909", Titre = "original Book 1", Auteur = "Author 2", Editeur = "Editeur 2", Format = Format.Broche, Disponible = true };
-            _db.Livres.Add(livreOrigine);
-            _db.SaveChanges();
+            var factory = new ConnectionFactory();
+            var context = factory.CreateContextForInMemory();
+            var localRepo = new LivreService(context);
+
+            context.Livres.Add(livreOrigine);
+            context.SaveChanges();
 
             var livreMAJ = new Livre { Isbn = "90909090909", Titre = "update Book 1", Auteur = "Author 3", Editeur = "Editeur 3", Format = Format.Broche, Disponible = true };
 
             // Act
-            var result = await _repository.Update("90909090909", livreMAJ);
+            var result = await localRepo.Update("90909090909", livreMAJ);
 
             // Assert
-            Assert.IsTrue(result);
-            var livre = _db.Livres.FirstOrDefault(b => b.Isbn == livreOrigine.Isbn);
+
+            var livre = context.Livres.FirstOrDefault(b => b.Isbn == livreOrigine.Isbn);
             Assert.IsNotNull(livre);
             Assert.IsTrue(result);
             Assert.AreEqual(livreMAJ.Titre, livre.Titre);
@@ -188,14 +243,19 @@ namespace TDD.Test.Services
                 new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
 
             };
-            _db.Livres.AddRange(livres);
-            _db.SaveChanges();
+            var factory = new ConnectionFactory();
+
+            //Get the instance of BlogDBContext  
+            var context = factory.CreateContextForInMemory();
+            var localRepo = new LivreService(context);
+            context.Livres.AddRange(livres);
+            context.SaveChanges();
 
             // Act
-            var result = await _repository.GetAvailableBooks();
+            var result = await localRepo.GetAvailableBooks();
 
             // Assert
-            Assert.AreEqual(livres.Count, result.Count());
+            Assert.AreEqual(livres.Where(a=>a.Disponible==true).ToList().Count, result.Count());
             CollectionAssert.AreEqual(livres, result);
         }
 
@@ -210,11 +270,16 @@ namespace TDD.Test.Services
                 new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
 
             };
-            _db.Livres.AddRange(livres);
-            _db.SaveChanges();
+            var factory = new ConnectionFactory();
+
+            //Get the instance of BlogDBContext  
+            var context = factory.CreateContextForInMemory();
+            var localRepo = new LivreService(context);
+            context.Livres.AddRange(livres);
+            context.SaveChanges();
 
             // Act
-            var result = await _repository.GetBooksByAuthorName("Author 1");
+            var result = await localRepo.GetBooksByAuthorName("Author 1");
 
             var livesAuthor1 = livres.Where(a => a.Auteur == "Author 1").ToList();
             // Assert
@@ -233,11 +298,17 @@ namespace TDD.Test.Services
                 new Livre { Isbn = "90909090902", Titre = "Book 3", Auteur = "Author 3", Editeur="Editeur 3", Format=Format.Poche, Disponible=true },
 
             };
-            _db.Livres.AddRange(livres);
-            _db.SaveChanges();
+
+            var factory = new ConnectionFactory();
+
+            //Get the instance of BlogDBContext  
+            var context = factory.CreateContextForInMemory();
+            var localRepo = new LivreService(context);
+            context.Livres.AddRange(livres);
+            context.SaveChanges();
 
             // Act
-            var result = await _repository.GetBooksByTitle("Book");
+            var result = await localRepo.GetBooksByTitle("Book");
 
             var livesTitre = livres.Where(a => a.Titre.Contains("Book")).ToList();
             // Assert

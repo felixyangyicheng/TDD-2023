@@ -11,12 +11,15 @@ namespace TDD.Data
     }
     public class BuDbContext:DbContext
 	{
-        public DbSet<Adherent> Adherents { get; set; }
-        public DbSet<Reservation> Reservations { get; set; }
-        public DbSet<Livre> Livres { get; set; }
-        public DbSet<MigrationHistory> __EFMigrationsHistory { get; set; }
+        public virtual DbSet<Adherent> Adherents { get; set; }
+        public virtual DbSet<Reservation> Reservations { get; set; }
+        public virtual DbSet<Livre> Livres { get; set; }
+        public virtual DbSet<MigrationHistory> __EFMigrationsHistory { get; set; }
 
+        public BuDbContext()
+        {
 
+        }
         public BuDbContext(DbContextOptions<BuDbContext> options)
            : base(options)
         {

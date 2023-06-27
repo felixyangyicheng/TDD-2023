@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.8" />
     <PackageReference Include="SQLite" Version="3.13.0" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="7.0.8" />
+    <PackageReference Include="Moq.EntityFrameworkCore" Version="7.0.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,9 +27,18 @@
   <ItemGroup>
     <None Remove="Services\" />
     <None Remove="Connections\" />
+    <None Remove="Controllers\" />
+    <None Remove="Statics\" />
+    <None Remove="Helpers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
     <Folder Include="Connections\" />
+    <Folder Include="Controllers\" />
+    <Folder Include="Statics\" />
+    <Folder Include="Helpers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Services\LivreServiceMockTest.cs" />
   </ItemGroup>
 </Project>

@@ -8,12 +8,12 @@ namespace TDD.Services
 {
 	public class LivreService:ILivreService
 	{
-       //private ILivreService _livre;
-       // public LivreService(ILivreService livre)
-       // {
-       //     this._livre = livre;
-       // }
-        private readonly BuDbContext _db;
+        //private ILivreService _livre;
+        //public LivreService(ILivreService livre)
+        //{
+        //    this._livre = livre;
+        //}
+        private  BuDbContext _db;
 
         public LivreService(
             BuDbContext db
@@ -24,7 +24,15 @@ namespace TDD.Services
 
         public async Task<bool> Create(Livre livre)
         {
+            try
+            {
+
             _db.Livres.Add(livre);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
             return await Save();
         }
 
@@ -77,7 +85,7 @@ namespace TDD.Services
 
         public async Task<bool> Update(string isbn, Livre livre)
         {
-            var origine = await _db.Livres.FirstOrDefaultAsync(a => a.Isbn == isbn);
+            var origine = await _db.Livres.FirstOrDefaultAsync(a => a.Isbn == livre.Isbn);
             if (origine != null)
             {
 
